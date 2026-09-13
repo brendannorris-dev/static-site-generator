@@ -1,6 +1,7 @@
 import unittest
 from textnode import TextNode, TextType, text_node_to_html_node
 from markdown_converter import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
+from blocktype import block_to_block_type, BlockType
 
 
 class TestTextNode(unittest.TestCase):
@@ -290,6 +291,59 @@ This is the same paragraph on a new line
                 "- This is a list\n- with items",
             ],
         )
+
+    def test_heading_block(self):
+        block = "### This is a header"
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.HEADING)
+
+    def test_code_block(self):
+        block = """```
+This is code
+```"""
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.CODE)
+
+    def test_quote_block(self):
+        block = """> This is
+> a quote"""
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.QUOTE)
+
+    def test_unorder_block(self):
+        block = """- Item 1
+- Item 2"""
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.UNORDERED_LIST)
+
+    def test_order_block(self):
+        block = """1. Item 1
+2. Item 2"""
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.ORDERED_LIST)
+
+    def test_paragraph_block(self):
+        block = "This is a normal paragraph"
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+
+    def test_broken_header_block(self):
+        block = "####### Broken Header"
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+
+    def test_broken_ordered_block(self):
+        block = """1. Item 1
+3. Item 3"""
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+
+    def test_broken_quote_block(self):
+        block = """> This is
+not a quote"""
+        block_type = block_to_block_type(block)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+
         
 if __name__ == "__main__":
     unittest.main()
