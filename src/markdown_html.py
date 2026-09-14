@@ -1,80 +1,37 @@
 from markdown_converter import markdown_to_blocks, text_to_textnodes
 from blocktype import block_to_block_type, BlockType
-from htmlnode import HTMLNode, ParentNode
+from htmlnode import ParentNode
 from textnode import text_node_to_html_node, TextNode, TextType
 
-def markdown_to_html_node(markdown):
-    new_markdown = markdown_to_blocks(markdown)
 
-    markdown_blocks = []
-    for individual_block in new_markdown:
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+
+    block_nodes = []
+    for individual_block in blocks:
         #Determine the block type for each block
         ib_block_type = block_to_block_type(individual_block)
 
         #Create HTML Node based on type of block
         if ib_block_type == BlockType.PARAGRAPH:
-            individual_block = individual_block.replace("\n", " ")
-            children_block = text_to_children(individual_block)
-            new_node = ParentNode("p", children_block)
-
+            new_node = paragraph_to_node(individual_block)
         elif ib_block_type == BlockType.QUOTE:
-            clean_quote = individual_block.split("\n")
-            clean_quote_list = []
-            for line in clean_quote:
-                if line.startswith(">"):
-                    line = line[1:]
-                if line.startswith(" "):
-                    line = line[1:]
-                clean_quote_list.append(line)
-            rejoined_quote = " ".join(clean_quote_list)
-            children_block = text_to_children(rejoined_quote)
-            new_node = ParentNode("blockquote", children_block)
-
+            new_node = quote_to_node(individual_block)
         elif ib_block_type == BlockType.UNORDERED_LIST:
-            clean_uo = individual_block.split("\n")
-            clean_uo_list = []
-            for line in clean_uo:
-                line = line[2:]
-                line_list = text_to_children(line)
-                line_node = ParentNode("li", line_list)
-                clean_uo_list.append(line_node)
-            new_node = ParentNode("ul", clean_uo_list)
-
+            new_node = unordered_list_to_node(individual_block)
         elif ib_block_type == BlockType.ORDERED_LIST:
-            clean_o = individual_block.split("\n")
-            clean_o_list = []
-            for line in clean_o:
-                period_index = line.find(".")
-                line = line[(period_index)+2:]
-                line_list = text_to_children(line)
-                line_node = ParentNode("li",line_list)
-                clean_o_list.append(line_node)
-            new_node = ParentNode("ol", clean_o_list)
-
+            new_node = ordered_list_to_node(individual_block)
         elif ib_block_type == BlockType.CODE:
-            individual_block = individual_block[4:-3]
-            new_ib = TextNode(individual_block, TextType.TEXT)
-            new_leaf = text_node_to_html_node(new_ib)
-            middle_parent = ParentNode("code", [new_leaf])
-            new_node = ParentNode("pre", [middle_parent])
-
+            new_node = code_to_node(individual_block)
         elif ib_block_type == BlockType.HEADING:
-            count = 0
-            for letter in individual_block:
-                if letter == "#":
-                    count += 1
-                    continue
-                else:
-                    break
-            individual_block = individual_block[count+1:]
-            new_ib = text_to_children(individual_block)
-            new_node = ParentNode(f"h{count}", new_ib)
+            new_node = heading_to_node(individual_block)
             
-        markdown_blocks.append(new_node)
+        block_nodes.append(new_node)
 
-    main_parent = ParentNode("div", markdown_blocks)
+    main_parent = ParentNode("div", block_nodes)
 
     return main_parent
+
 
 def text_to_children(text):
     children_list = text_to_textnodes(text)
@@ -83,3 +40,67 @@ def text_to_children(text):
         new_child = text_node_to_html_node(child)
         html_list.append(new_child)
     return html_list
+
+
+def paragraph_to_node(block):
+    text = block.replace("\n", " ")
+    children = text_to_children(text)
+    return ParentNode("p", children)
+
+
+def quote_to_node(block):
+    split_quote = block.split("\n")
+    quote_list = []
+    for line in split_quote:
+        new_line = line
+        if line.startswith(">"):
+            new_line = line[1:]
+        if new_line.startswith(" "):
+            new_line = new_line[1:]
+        quote_list.append(new_line)
+    rejoined_quote = " ".join(quote_list)
+    children = text_to_children(rejoined_quote)
+    return ParentNode("blockquote", children)
+
+
+def unordered_list_to_node(block):
+    split_list = block.split("\n")
+    unordered_list = []
+    for line in split_list:
+        new_line = line[2:]
+        children = text_to_children(new_line)
+        list_item_node = ParentNode("li", children)
+        unordered_list.append(list_item_node)
+    return ParentNode("ul", unordered_list)
+
+
+def ordered_list_to_node(block):
+    split_list = block.split("\n")
+    ordered_list = []
+    for line in split_list:
+        period_index = line.find(".")
+        trimmed_line = line[(period_index)+2:]
+        children = text_to_children(trimmed_line)
+        list_item_node = ParentNode("li", children)
+        ordered_list.append(list_item_node)
+    return ParentNode("ol", ordered_list)
+
+
+def code_to_node(block):
+    trimmed_block = block[4:-3]
+    block_node = text_node_to_html_node(TextNode(trimmed_block, TextType.TEXT))
+    code_node = ParentNode("code", [block_node])
+    return ParentNode("pre", [code_node])
+
+
+def heading_to_node(block):
+    count = 0
+    for letter in block:
+        if letter == "#":
+            count += 1
+            continue
+        else:
+            break
+    trimmed_block = block[count+1:]
+    children = text_to_children(trimmed_block)
+    return ParentNode(f"h{count}", children)
