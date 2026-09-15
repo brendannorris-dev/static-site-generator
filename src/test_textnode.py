@@ -1,6 +1,6 @@
 import unittest
 from textnode import TextNode, TextType, text_node_to_html_node
-from markdown_converter import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
+from markdown_converter import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks, extract_title
 from blocktype import block_to_block_type, BlockType
 from markdown_html import markdown_to_html_node
 
@@ -384,6 +384,27 @@ the **same** even with inline stuff
         html,
         "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
     )
+
+    def test_extract_title(self):
+        md = "# This is the title"
+        title = extract_title(md)
+        self.assertEqual("This is the title", title)
+
+    def test_extract_title_with_whitespace(self):
+        md = "#     This is the title with extra whitespace       "
+        title = extract_title(md)
+        self.assertEqual("This is the title with extra whitespace", title)
+
+    def test_multiline_extract_title(self):
+        md = """This is not the title
+# But this is"""
+        title = extract_title(md)
+        self.assertEqual("But this is", title)
+
+    def test_extract_title_no_h1(self):
+        md = "## Incorrect title"
+        with self.assertRaises(Exception):
+            title = extract_title(md)
 
 if __name__ == "__main__":
     unittest.main()

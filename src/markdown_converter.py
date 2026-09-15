@@ -104,3 +104,10 @@ def markdown_to_blocks(markdown) -> list[str]:
         if line != "":
             new_markdown.append(line)
     return new_markdown
+
+def extract_title(markdown):
+    lines_list = markdown.split("\n")
+    for line in lines_list:
+        if line.startswith("# "):
+            return (line[1:].strip())
+    raise Exception("Title missing; no line with singular # header")
