@@ -2,7 +2,7 @@ from textnode import TextNode, TextType
 from copystatic import copy_files_recursive
 import os, shutil
 
-from generatepage import generate_page
+from generatepage import generate_page, generate_pages_recursive
 from markdown_html import markdown_to_html_node
 
 def main():
@@ -10,6 +10,6 @@ def main():
         shutil.rmtree("public")
     copy_files_recursive("static", "public")
 
-    generate_page("content/index.md", "template.html", "public/index.html")
+    generate_pages_recursive("content", "template.html", "public")
 
 main()
