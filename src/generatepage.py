@@ -2,7 +2,7 @@ from markdown_html import markdown_to_html_node
 from markdown_converter import extract_title
 import os
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     with open(from_path, "r") as f:
@@ -15,6 +15,8 @@ def generate_page(from_path, template_path, dest_path):
 
     template_file = template_file.replace("{{ Title }}", title)
     template_file = template_file.replace("{{ Content }}", html_string)
+    template_file = template_file.replace('href="/', f'href="{basepath}')
+    template_file = template_file.replace('src="/', f'src="{basepath}')
 
     dest_path_dir = os.path.dirname(dest_path)
     if not os.path.exists(dest_path_dir):
@@ -22,10 +24,10 @@ def generate_page(from_path, template_path, dest_path):
     with open(dest_path, "w") as d:
         d.write(template_file)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     for entry in os.listdir(dir_path_content):
         full_path = os.path.join(dir_path_content, entry)
         if os.path.isfile(full_path):
-            generate_page(full_path, template_path, os.path.join(dest_dir_path, entry.replace(".md",".html")))
+            generate_page(full_path, template_path, os.path.join(dest_dir_path, entry.replace(".md",".html")), basepath)
         else:
-            generate_pages_recursive(full_path, template_path, os.path.join(dest_dir_path, entry))
+            generate_pages_recursive(full_path, template_path, os.path.join(dest_dir_path, entry), basepath)
